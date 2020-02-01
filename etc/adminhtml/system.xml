@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Amazon Fraud integration (https://aws.amazon.com/fraud-detector/?nc1=h_ls)
+ *
+ * Use AWS Fraud to detect fake customers
+ *
+ * @package     ImaginationMedia\AwsFraud
+ * @author      Igor Ludgero Miura <igor@imaginationmedia.com>
+ * @copyright   Copyright (c) 2020 Imagination Media (https://www.imaginationmedia.com/)
+ * @license     https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="aws" translate="label" sortOrder="900">
+            <label>Amazon AWS</label>
+        </tab>
+        <section id="fraud" translate="label" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Fraud</label>
+            <tab>aws</tab>
+            <resource>ImaginationMedia_Fraud::settings</resource>
+            <group id="general" translate="label, comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>General</label>
+                <comment>General config used to setup the Fraud integration</comment>
+                <field id="enable" translate="label, comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="profile" translate="label, comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Profile</label>
+                    <comment>Enables you to specify which profile to use when credentials are created from the AWS credentials file in your HOME directory. This setting overrides the AWS_PROFILE environment variable.</comment>
+                    <depends>
+                        <field id="*/*/enable">1</field>
+                    </depends>
+                </field>
+                <field id="version" translate="label, comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Version</label>
+                    <comment>The version of the web service to use (e.g., 2006-03-01).</comment>
+                    <depends>
+                        <field id="*/*/enable">1</field>
+                    </depends>
+                </field>
+                <field id="region" translate="label, comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Region</label>
+                    <comment><![CDATA[AWS Region to connect to. See the <a href="https://docs.aws.amazon.com/general/latest/gr/rande.html" target="_blank">AWS Regions and Endpoints</a> for a list of available Regions.]]></comment>
+                    <depends>
+                        <field id="*/*/enable">1</field>
+                    </depends>
+                </field>
+                <field id="detector" translate="label, comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Detector ID</label>
+                    <comment>The ID from the detector used to review data through AWS Fraud.</comment>
+                    <depends>
+                        <field id="*/*/enable">1</field>
+                    </depends>
+                </field>
+                <field id="event" translate="label, comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Event ID</label>
+                    <comment>The ID from the event used to review data through AWS Fraud.</comment>
+                    <depends>
+                        <field id="*/*/enable">1</field>
+                    </depends>
+                </field>
+                <field id="auto_rate" translate="label, comment" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Fraud Rate (Minimum)</label>
+                    <comment>Set a fraud rate that we will automatically flag the customer as fraud. It should be an integer value.</comment>
+                    <depends>
+                        <field id="*/*/enable">1</field>
+                    </depends>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

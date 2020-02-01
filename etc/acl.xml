@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Amazon Fraud integration (https://aws.amazon.com/fraud-detector/?nc1=h_ls)
+ *
+ * Use AWS Fraud to detect fake customers
+ *
+ * @package     ImaginationMedia\AwsFraud
+ * @author      Igor Ludgero Miura <igor@imaginationmedia.com>
+ * @copyright   Copyright (c) 2020 Imagination Media (https://www.imaginationmedia.com/)
+ * @license     https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
+    <acl>
+        <resources>
+            <resource id="Magento_Backend::admin">
+                <resource id="ImaginationMedia_AwsFraud::settings" title="AWS Fraud - Settings" sortOrder="100" />
+            </resource>
+        </resources>
+    </acl>
+</config>

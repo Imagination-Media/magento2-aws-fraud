@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * Amazon Fraud integration (https://aws.amazon.com/fraud-detector/?nc1=h_ls)
+ *
+ * Use AWS Fraud to detect fake customers
+ *
+ * @package     ImaginationMedia\AwsFraud
+ * @author      Igor Ludgero Miura <igor@imaginationmedia.com>
+ * @copyright   Copyright (c) 2020 Imagination Media (https://www.imaginationmedia.com/)
+ * @license     https://opensource.org/licenses/OSL-3.0.php Open Software License 3.0
+ */
+
+declare(strict_types=1);
+
+use ImaginationMedia\AwsFraud\Model\Fraud\Detector;
+use ImaginationMedia\AwsFraud\Setup\Patch\Data\AddCustomerAttributes;
+
+/**
+ * @var $this \ImaginationMedia\AwsFraud\Block\Adminhtml\Customer\Edit\Tab\Fraud
+ * @var $customer \Magento\Customer\Model\Customer
+ */
+$customer = $this->getCustomer();
+
+?>
+
+<div class="aws-fraud-rate">
+    <div class="aws-logo">
+        <img src="<?= $this->getAwsLogoUrl() ?>" alt="<?= __("AWS Logo") ?>" />
+    </div>
+    <div class="title">
+        <p class="main-title"><?= __("AWS Fraud Detector") ?></p>
+        <legend><?= __("Classify the changes this customer account is a fraud account.") ?></legend>
+    </div>
+    <div class="aws-result">
+        <?php if ($customer->getCustomAttribute(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE)) : ?>
+            <p>
+                <strong><?= __("Fraud Score:") ?></strong>
+                <?= $customer->getCustomAttribute(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE) ?>%
+            </p>
+            <div class="actions">
+                <?php if ($customer->getCustomAttribute(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG)
+                    === Detector::AWS_FLAG_FRAUD) : ?>
+                    <p class="status"><?= __("Fraud Status:") ?><strong><?= __("Fraud") ?></strong></p>
+                    <button type="button" class="action"><span<?= __("Report as non fraud") ?></span></button>
+                <?php elseif ($customer->getCustomAttribute(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG)
+                    === Detector::AWS_FLAG_NOT_FRAUD) : ?>
+                    <p class="status"><?= __("Fraud Status:") ?><strong><?= __("Not Fraud") ?></strong></p>
+                    <button type="button" class="action"><span<?= __("Report as fraud") ?></span></button>
+                <?php else : ?>
+                    <button type="button" class="action"><span<?= __("Report as fraud") ?></span></button>
+                    <button type="button" class="action"><span<?= __("Report as non fraud") ?></span></button>
+                <?php endif; ?>
+            </div>
+        <?php else : ?>
+            <p><?= __("Not possible to connect to AWS Fraud. Please check your credentials and the service availability.") ?></p>
+        <?php endif; ?>
+    </div>
+</div>
