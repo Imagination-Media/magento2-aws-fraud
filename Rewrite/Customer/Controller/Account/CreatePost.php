@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 namespace ImaginationMedia\AwsFraud\Rewrite\Customer\Controller\Account;
 
-use Aws\FraudDetector\FraudDetectorClient;
+use ImaginationMedia\AwsFraud\Model\Fraud\Detector;
 use ImaginationMedia\AwsFraud\Model\System\Config;
 use Magento\Customer\Api\AccountManagementInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface as CustomerRepository;
@@ -35,6 +35,7 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Data\Form\FormKey\Validator;
 use Magento\Framework\Escaper;
+use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
 use Magento\Framework\UrlFactory;
 use Magento\Newsletter\Model\SubscriberFactory;
 use Magento\Store\Model\StoreManagerInterface;
@@ -42,9 +43,19 @@ use Magento\Store\Model\StoreManagerInterface;
 class CreatePost extends CoreCreatePost
 {
     /**
+     * @var Detector
+     */
+    protected $fraudDetector;
+
+    /**
      * @var Config
      */
     protected $config;
+
+    /**
+     * @var RemoteAddress
+     */
+    protected $remoteAddress;
 
     /**
      * CreatePost constructor.
@@ -67,7 +78,9 @@ class CreatePost extends CoreCreatePost
      * @param DataObjectHelper $dataObjectHelper
      * @param AccountRedirect $accountRedirect
      * @param CustomerRepository $customerRepository
+     * @param Detector $fraudDetector
      * @param Config $config
+     * @param RemoteAddress $remoteAddress
      * @param Validator|null $formKeyValidator
      */
     public function __construct(
@@ -90,10 +103,11 @@ class CreatePost extends CoreCreatePost
         DataObjectHelper $dataObjectHelper,
         AccountRedirect $accountRedirect,
         CustomerRepository $customerRepository,
+        Detector $fraudDetector,
         Config $config,
+        RemoteAddress $remoteAddress,
         Validator $formKeyValidator = null
     ) {
-        $this->config = $config;
         parent::__construct(
             $context,
             $customerSession,
@@ -116,6 +130,9 @@ class CreatePost extends CoreCreatePost
             $customerRepository,
             $formKeyValidator
         );
+        $this->fraudDetector = $fraudDetector;
+        $this->config = $config;
+        $this->remoteAddress = $remoteAddress;
     }
 
     /**
@@ -124,13 +141,17 @@ class CreatePost extends CoreCreatePost
     public function execute()
     {
         if ($this->config->isEnabled()) {
-            $fraudClient = new FraudDetectorClient([
-                'profile' => $this->config->getProfile(),
-                'version' => $this->config->getVersion(),
-                'region' => $this->config->getRegion()
+            $email = $this->getRequest()->getParam("email");
+            $ipAddress = $this->remoteAddress->getRemoteAddress();
+            $timestamp = $this->fraudDetector->getCurrentTimestamp();
+
+            $scoreNumber = $this->fraudDetector->getCustomerFraudScore([
+                "email_address" => $email,
+                "ip_address" => $ipAddress,
+                "event_timestamp" => (string)$timestamp
             ]);
 
-            if (false) {
+            if ($scoreNumber >= $this->config->getAutoRate()) {
                 $this->messageManager->addErrorMessage(
                     __("This account was flagged as fraud and can't be created. Please contact us.")
                 );

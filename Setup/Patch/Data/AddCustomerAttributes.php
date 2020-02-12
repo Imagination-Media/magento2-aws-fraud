@@ -81,14 +81,16 @@ class AddCustomerAttributes implements DataPatchInterface
             Customer::ENTITY,
             self::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG,
             [
-                'type'         => 'varchar',
-                'label'        => 'Fraud Flag (AWS)',
-                'input'        => 'text',
-                'required'     => false,
-                'visible'      => true,
-                'user_defined' => true,
-                'position'     => 10001,
-                'system'       => 0,
+                'type'                  => 'varchar',
+                'label'                 => 'Fraud Flag (AWS)',
+                'input'                 => 'text',
+                'required'              => false,
+                'visible'               => true,
+                'user_defined'          => true,
+                'position'              => 10001,
+                'system'                => 0,
+                'is_used_in_grid'       => 1,
+                'is_visible_in_grid'    => 1
             ]
         );
         $fraudFlag = $this->eavConfig->getAttribute(Customer::ENTITY, self::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG);
@@ -106,14 +108,16 @@ class AddCustomerAttributes implements DataPatchInterface
             Customer::ENTITY,
             self::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE,
             [
-                'type'         => 'int',
-                'label'        => 'Fraud Rate (AWS)',
-                'input'        => 'text',
-                'required'     => false,
-                'visible'      => true,
-                'user_defined' => true,
-                'position'     => 10002,
-                'system'       => 0,
+                'type'                  => 'int',
+                'label'                 => 'Fraud Rate (AWS)',
+                'input'                 => 'text',
+                'required'              => false,
+                'visible'               => true,
+                'user_defined'          => true,
+                'position'              => 10002,
+                'system'                => 0,
+                'is_used_in_grid'       => 1,
+                'is_visible_in_grid'    => 1
             ]
         );
         $fraudRate = $this->eavConfig->getAttribute(Customer::ENTITY, self::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE);

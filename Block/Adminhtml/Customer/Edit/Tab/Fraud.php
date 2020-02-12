@@ -20,15 +20,14 @@ use ImaginationMedia\AwsFraud\Setup\Patch\Data\AddCustomerAttributes;
 use Magento\Backend\Block\Template\Context;
 use Magento\Customer\Controller\RegistryConstants;
 use Magento\Customer\Model\Customer;
+use Magento\Customer\Model\ResourceModel\Customer\CollectionFactory;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Phrase;
 use Magento\Framework\Registry;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\View\Asset\Repository as AssetRepository;
 use Magento\Framework\View\Element\Template;
 use Magento\Ui\Component\Layout\Tabs\TabInterface;
-use Magento\Customer\Model\CustomerFactory;
 
 class Fraud extends Template implements TabInterface
 {
@@ -53,9 +52,9 @@ class Fraud extends Template implements TabInterface
     protected $timezone;
 
     /**
-     * @var CustomerFactory
+     * @var CollectionFactory
      */
-    protected $customerFactory;
+    protected $collectionFactory;
 
     /**
      * Fraud constructor.
@@ -64,7 +63,7 @@ class Fraud extends Template implements TabInterface
      * @param AssetRepository $assetRepository
      * @param Detector $detector
      * @param TimezoneInterface $timezone
-     * @param CustomerFactory $customerFactory
+     * @param CollectionFactory $collectionFactory
      * @param array $data
      */
     public function __construct(
@@ -73,14 +72,14 @@ class Fraud extends Template implements TabInterface
         AssetRepository $assetRepository,
         Detector $detector,
         TimezoneInterface $timezone,
-        CustomerFactory $customerFactory,
+        CollectionFactory $collectionFactory,
         array $data = []
     ) {
         $this->coreRegistry = $registry;
         $this->assetRepository = $assetRepository;
         $this->detector = $detector;
         $this->timezone = $timezone;
-        $this->customerFactory = $customerFactory;
+        $this->collectionFactory = $collectionFactory;
         parent::__construct($context, $data);
     }
 
@@ -88,23 +87,42 @@ class Fraud extends Template implements TabInterface
      * Get current customer id
      * @return int
      */
-    public function getCustomerId() : int
+    public function getCustomerId(): int
     {
         return (int)$this->coreRegistry->registry(RegistryConstants::CURRENT_CUSTOMER_ID);
     }
 
     /**
+     * Load customer
+     * @return Customer
+     * @throws LocalizedException
+     */
+    protected function loadCustomer() : Customer
+    {
+        $collection = $this->collectionFactory->create()
+            ->addAttributeToFilter("entity_id", $this->getCustomerId())
+            ->addAttributeToSelect([
+                "entity_id",
+                "email",
+                AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE,
+                AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG
+            ]);
+
+        return $collection->getFirstItem();
+    }
+
+    /**
      * Return customer
      * @return Customer
+     * @throws LocalizedException
      */
-    public function getCustomer() : Customer
+    public function getCustomer(): Customer
     {
-        $customer = $this->customerFactory->create();
-        $customer->load((int)$this->getCustomerId());
+        $customer = $this->loadCustomer();
 
         try {
-            if (!$customer->getData(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE)) {
-                $date = $timestamp = new \DateTime(
+            if ($customer->getData(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE) === null) {
+                $date = new \DateTime(
                     $customer->getCreatedAt(),
                     new \DateTimeZone($this->timezone->getConfigTimezone())
                 );
@@ -127,7 +145,7 @@ class Fraud extends Template implements TabInterface
      * Get tab's label
      * @return Phrase
      */
-    public function getTabLabel() : Phrase
+    public function getTabLabel(): Phrase
     {
         return __('Aws Fraud Detector');
     }
@@ -136,7 +154,7 @@ class Fraud extends Template implements TabInterface
      * Get tab title
      * @return Phrase
      */
-    public function getTabTitle() : Phrase
+    public function getTabTitle(): Phrase
     {
         return __('Aws Fraud Detector');
     }
@@ -145,7 +163,7 @@ class Fraud extends Template implements TabInterface
      * Can we show the tab?
      * @return bool
      */
-    public function canShowTab() : bool
+    public function canShowTab(): bool
     {
         if ($this->getCustomerId()) {
             return true;
@@ -157,7 +175,7 @@ class Fraud extends Template implements TabInterface
      * Is hidden?
      * @return bool
      */
-    public function isHidden() : bool
+    public function isHidden(): bool
     {
         if ($this->getCustomerId()) {
             return false;
@@ -169,7 +187,7 @@ class Fraud extends Template implements TabInterface
      * Get tab's css class
      * @return string
      */
-    public function getTabClass() : string
+    public function getTabClass(): string
     {
         return '';
     }
@@ -178,7 +196,7 @@ class Fraud extends Template implements TabInterface
      * Url used to render the tab
      * @return string
      */
-    public function getTabUrl() : string
+    public function getTabUrl(): string
     {
         return $this->getUrl('awsfraud/customer/index', ['_current' => true]);
     }
@@ -187,7 +205,7 @@ class Fraud extends Template implements TabInterface
      * Is tab loaded using ajax?
      * @return bool
      */
-    public function isAjaxLoaded() : bool
+    public function isAjaxLoaded(): bool
     {
         return true;
     }
@@ -196,8 +214,26 @@ class Fraud extends Template implements TabInterface
      * Get AWS logo url
      * @return string
      */
-    public function getAwsLogoUrl() : string
+    public function getAwsLogoUrl(): string
     {
         return $this->assetRepository->getUrl("ImaginationMedia_AwsFraud/images/AWS_4923041.png");
+    }
+
+    /**
+     * Get the whitelist url
+     * @return string
+     */
+    public function getWhitelistUrl(): string
+    {
+        return $this->_urlBuilder->getUrl("awsfraud/fraud/whitelist", ['customer_id' => $this->getCustomerId()]);
+    }
+
+    /**
+     * Get the black list url
+     * @return string
+     */
+    public function getBlacklistUrl(): string
+    {
+        return $this->_urlBuilder->getUrl("awsfraud/fraud/blacklist", ['customer_id' => $this->getCustomerId()]);
     }
 }

@@ -30,26 +30,34 @@ $customer = $this->getCustomer();
     </div>
     <div class="title">
         <p class="main-title"><?= __("AWS Fraud Detector") ?></p>
-        <legend><?= __("Classify the changes this customer account is a fraud account.") ?></legend>
+        <legend><?= __("Classify if this customer account is a fraud account.") ?></legend>
     </div>
     <div class="aws-result">
-        <?php if ($customer->getCustomAttribute(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE)) : ?>
+        <?php if ($customer->getData(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE) !== null) : ?>
             <p>
                 <strong><?= __("Fraud Score:") ?></strong>
-                <?= $customer->getCustomAttribute(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE) ?>%
+                <?= $customer->getData(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE) ?>%
             </p>
             <div class="actions">
-                <?php if ($customer->getCustomAttribute(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG)
+                <?php if ($customer->getData(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG)
                     === Detector::AWS_FLAG_FRAUD) : ?>
                     <p class="status"><?= __("Fraud Status:") ?><strong><?= __("Fraud") ?></strong></p>
-                    <button type="button" class="action"><span<?= __("Report as non fraud") ?></span></button>
-                <?php elseif ($customer->getCustomAttribute(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG)
+                    <button type="button" class="action" onclick="window.location.href='<?= $this->getWhitelistUrl() ?>'">
+                        <span><?= __("Report as non fraud") ?></span>
+                    </button>
+                <?php elseif ($customer->getData(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG)
                     === Detector::AWS_FLAG_NOT_FRAUD) : ?>
                     <p class="status"><?= __("Fraud Status:") ?><strong><?= __("Not Fraud") ?></strong></p>
-                    <button type="button" class="action"><span<?= __("Report as fraud") ?></span></button>
+                    <button type="button" class="action" onclick="window.location.href='<?= $this->getBlacklistUrl() ?>'">
+                        <span><?= __("Report as fraud") ?></span>
+                    </button>
                 <?php else : ?>
-                    <button type="button" class="action"><span<?= __("Report as fraud") ?></span></button>
-                    <button type="button" class="action"><span<?= __("Report as non fraud") ?></span></button>
+                    <button type="button" class="action" onclick="window.location.href='<?= $this->getBlacklistUrl() ?>'">
+                        <span><?= __("Report as fraud") ?></span>
+                    </button>
+                    <button type="button" class="action" onclick="window.location.href='<?= $this->getWhitelistUrl() ?>'">
+                        <span><?= __("Report as non fraud") ?></span>
+                    </button>
                 <?php endif; ?>
             </div>
         <?php else : ?>

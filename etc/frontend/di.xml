@@ -15,4 +15,17 @@
     <!-- Validate customer account creation -->
     <preference for="Magento\Customer\Controller\Account\CreatePost"
                 type="ImaginationMedia\AwsFraud\Rewrite\Customer\Controller\Account\CreatePost" />
+
+    <!-- Validate customer login -->
+    <preference for="Magento\Customer\Controller\Account\LoginPost"
+                type="ImaginationMedia\AwsFraud\Rewrite\Customer\Controller\Account\LoginPost" />
+
+    <!-- Add additional info to be used on checkout -->
+    <type name="Magento\Checkout\Model\CompositeConfigProvider">
+        <arguments>
+            <argument name="configProviders" xsi:type="array">
+                <item name="aws_fraud" xsi:type="object">ImaginationMedia\AwsFraud\Ui\AwsFraudProvider</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

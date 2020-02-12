@@ -22,6 +22,7 @@ use Magento\Customer\Model\Customer;
 use Magento\Customer\Model\ResourceModel\Customer as CustomerResource;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 
 class Detector
 {
@@ -49,18 +50,26 @@ class Detector
     protected $customerResource;
 
     /**
+     * @var TimezoneInterface
+     */
+    protected $timezone;
+
+    /**
      * Detector constructor.
      * @param Config $config
      * @param ResourceConnection $resourceConnection
      * @param CustomerResource $customerResource
+     * @param TimezoneInterface $timezone
      */
     public function __construct(
         Config $config,
         ResourceConnection $resourceConnection,
-        CustomerResource $customerResource
+        CustomerResource $customerResource,
+        TimezoneInterface $timezone
     ) {
         $this->config = $config;
         $this->customerResource = $customerResource;
+        $this->timezone = $timezone;
         $this->connection = $resourceConnection->getConnection();
 
         if ($config->isEnabled()) {
@@ -92,12 +101,22 @@ class Detector
     }
 
     /**
+     * Get current timestamp
+     * @return int
+     */
+    public function getCurrentTimestamp(): int
+    {
+        $date = $this->timezone->date();
+        return $date->getTimestamp();
+    }
+
+    /**
      * @param array $customerData
      * @param Customer|null $customer
      * @return int
      * @throws \Exception
      */
-    public function getCustomerFraudScore(array $customerData, ?Customer $customer): int
+    public function getCustomerFraudScore(array $customerData, ?Customer $customer = null): int
     {
         $score = $this->fraudClient->getPrediction([
             "detectorId" => $this->config->getDetector(),
@@ -117,13 +136,16 @@ class Detector
 
         if ($customer) {
             $customer->setData(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE, $scoreNumber);
-            $this->customerResource->saveAttribute($customer, AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE);
 
             if ($scoreNumber > $this->config->getAutoRate()) {
                 $customer->setData(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG, "fraud");
             } else {
-                $customer->setData(AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG, "not_fraud");
+                $customer->setData(
+                    AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG,
+                    "not_fraud"
+                );
             }
+            $this->customerResource->saveAttribute($customer, AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_RATE);
             $this->customerResource->saveAttribute($customer, AddCustomerAttributes::CUSTOMER_ATTRIBUTE_AWS_FRAUD_FLAG);
         }
 
